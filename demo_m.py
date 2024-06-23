@@ -161,14 +161,14 @@ def get_openai_messages(transcript, feedback_type):
     if feedback_type == 'one-on-one':
         return [{
             "role": "system",
-            "content": "You are an executive coach specializing in providing feedback to managers. Your task is to analyze conversations and provide detailed feedback. The feedback should be based on a JSON transcript that includes sentiment analysis (both verbal and facial expression). Your job is to improve the user's emotional intelligence, highlighting interactions and trends the user might have missed. The feedback should be structured to include: 1. A summary of the conversation. 2. Feedback on what was done well. 3. Feedback on what wasn't done well. 4. Insights or trends that the user may have missed."
+            "content": "You are an executive coach specializing in providing feedback to managers. Your task is to analyze conversations and provide detailed feedback. The feedback should be based on a JSON transcript that includes sentiment analysis (both verbal and facial expression). Your job is to improve the user's emotional intelligence, highlighting interactions and trends the user might have missed. The feedback should be structured to include: 1. A summary of the conversation. 2. Feedback on what was done well. 3. Feedback on what wasn't done well. 4. Insights or trends that the user may have missed. Be sure to refer to speakers by proper labels (Speaker 1, Speaker 2)."
 
         }, {
             "role": "user",
-            "content": f"Analyze the following JSON transcript of a conversation. Provide a summary of the conversation, feedback on what was done well, and feedback on what wasn't done well. Here is the JSON transcript: {transcript}"
+            "content": f"Analyze the following JSON transcript of a conversation. Provide a summary of the conversation, feedback on what was done well, and feedback on what wasn't done well. Do not include raw numbers from the analysis. Here is the JSON transcript: {transcript}"
         }, {
           "role": "assistant",
-          "content": "Ensure that the feedback is constructive and actionable, providing specific examples from the transcript when relevant. Explain what was done well, what wasn't done well, and what insights or trends the manager may have missed."
+          "content": "Ensure that the feedback is constructive and actionable, providing specific examples from the transcript when relevant. Explain what was done well, what wasn't done well, and what insights or trends the manager may have missed. Focus on actionable feedback that can be easily measured and fixed."
         }]
     else:
         return [{
@@ -179,7 +179,7 @@ def get_openai_messages(transcript, feedback_type):
             "content": f"Analyze the following JSON transcript of a presentation. Provide feedback on what was done well and what wasn't done well. Here is the JSON transcript of the video analysis: {transcript}"
         }, {
             "role": "assistant",
-            "content": "Ensure that the feedback is constructive and actionable, providing specific examples from the transcript when relevant. Explain what was done well, what wasn't done well, and what behaviors the presenter may have missed."
+            "content": "Ensure that the feedback is constructive and actionable, providing specific examples from the transcript when relevant. Explain what was done well, what wasn't done well, and what behaviors the presenter may have missed. Focus on actionable feedback that can be easily measured and fixed."
         }]
 
 def get_feedback(messages):
@@ -191,9 +191,9 @@ def get_feedback(messages):
 
 def main():
     # File paths for audio, video, and text files
-    audio_path = "nvc1_audio.wav"
-    video_path = "nvc1.mp4"
-    transcript_path = "nvc1_transcript.txt"
+    audio_path = "1-1.wav"
+    video_path = "1on1.mp4"
+    transcript_path = "1-1.txt"
 
     # Analyze each modality and dump API responses
     print("Analyzing audio...")
@@ -220,7 +220,7 @@ def main():
     print(f"Synchronized emotion data has been written to {output_path}")
 
     # Send to OpenAI
-    messages = get_openai_messages(synchronized_data, 'presentation')
+    messages = get_openai_messages(synchronized_data, 'one-on-one')
     feedback = get_feedback(messages)
     print(feedback)
 
