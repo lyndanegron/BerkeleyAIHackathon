@@ -4,12 +4,16 @@ import requests
 import time
 from dotenv import load_dotenv
 from collections import defaultdict
+from openai import OpenAI
 
 # Hume AI API
 load_dotenv()
 API_KEY = os.getenv('HUME_API_KEY')
 BASE_URL = 'https://api.hume.ai/v0'
 BATCH_JOBS_URL = f'{BASE_URL}/batch/jobs'
+
+# Initialize OpenAI Client
+client = OpenAI()
 
 def start_hume_job(file_path, model_type):
     with open(file_path, 'rb') as file:
@@ -153,6 +157,38 @@ def write_synchronized_data_to_file(synchronized_data, output_path):
                 f.write("  No video emotions data available\n")
             f.write("\n" + "-"*50 + "\n\n")
 
+def get_openai_messages(transcript, feedback_type): 
+    if feedback_type == 'one-on-one':
+        return [{
+            "role": "system",
+            "content": "You are an executive coach specializing in providing feedback to managers. Your task is to analyze conversations and provide detailed feedback. The feedback should be based on a JSON transcript that includes sentiment analysis (both verbal and facial expression). Your job is to improve the user's emotional intelligence, highlighting interactions and trends the user might have missed. The feedback should be structured to include: 1. A summary of the conversation. 2. Feedback on what was done well. 3. Feedback on what wasn't done well. 4. Insights or trends that the user may have missed."
+
+        }, {
+            "role": "user",
+            "content": f"Analyze the following JSON transcript of a conversation. Provide a summary of the conversation, feedback on what was done well, and feedback on what wasn't done well. Here is the JSON transcript: {transcript}"
+        }, {
+          "role": "assistant",
+          "content": "Ensure that the feedback is constructive and actionable, providing specific examples from the transcript when relevant. Explain what was done well, what wasn't done well, and what insights or trends the manager may have missed."
+        }]
+    else:
+        return [{
+            "role": "system",
+            "content": "You are an executive coach specializing in providing feedback to anyone who does any public speaking. Your task is to analyze this presentation and provide detailed feedback. The feedback should be based on a JSON transcript that includes sentiment analysis and physical expression. Your job is to improve the user's understanding of their expression and improve emotional intelligence. You should highlight moments, trends and behaviors the user may have missed. The feedback should be structured and include what the user did well, what they should improve and any behaviors the user may have overlooked."
+        }, {
+            "role": "user",
+            "content": f"Analyze the following JSON transcript of a presentation. Provide feedback on what was done well and what wasn't done well. Here is the JSON transcript of the video analysis: {transcript}"
+        }, {
+            "role": "assistant",
+            "content": "Ensure that the feedback is constructive and actionable, providing specific examples from the transcript when relevant. Explain what was done well, what wasn't done well, and what behaviors the presenter may have missed."
+        }]
+
+def get_feedback(messages):
+    completion = client.chat.completions.create(
+        model="gpt-4o",
+        messages=messages)
+
+    return(completion.choices[0].message.content)
+
 def main():
     # File paths for audio, video, and text files
     audio_path = "nvc1_audio.wav"
@@ -182,6 +218,11 @@ def main():
     output_path = "synchronized_emotions.txt"
     write_synchronized_data_to_file(synchronized_data, output_path)
     print(f"Synchronized emotion data has been written to {output_path}")
+
+    # Send to OpenAI
+    messages = get_openai_messages(synchronized_data, 'presentation')
+    feedback = get_feedback(messages)
+    print(feedback)
 
 if __name__ == "__main__":
     main()
