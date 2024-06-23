@@ -87,24 +87,39 @@ def write_to_file(results, output_file):
                 file.write(f"  {emotion}: {score}\n")
             file.write("\n")
 
-
-def get_feedback(transcript):
-    completion = client.chat.completions.create(
-        model="gpt-3.5-turbo",
-        messages=[{
+def get_openai_messages(transcript, feedback_type): 
+    if feedback_type == 'one-on-one':
+        return [{
             "role": "system",
-            "content": "You are an executive coach specialized in providing feedback to managers. Your task is to analyze conversations and provide detailed feedback. The feedback should be based on a JSON transcript that includes sentiment analysis (both verbal and facial expression). Your job is to improve the user's emotional intelligence, highlighting interactions and trends the user might have missed. The feedback should be structured to include: 1. A summary of the conversation. 2. Feedback on what was done well. 3. Feedback on what wasn't done well. 4. Insights or trends that the user may have missed."
+            "content": "You are an executive coach specializing in providing feedback to managers. Your task is to analyze conversations and provide detailed feedback. The feedback should be based on a JSON transcript that includes sentiment analysis (both verbal and facial expression). Your job is to improve the user's emotional intelligence, highlighting interactions and trends the user might have missed. The feedback should be structured to include: 1. A summary of the conversation. 2. Feedback on what was done well. 3. Feedback on what wasn't done well. 4. Insights or trends that the user may have missed."
+
         }, {
             "role": "user",
-            "content": f"Please analyze the following JSON transcript of a conversation, which includes sentiment analysis of both verbal and facial expressions. Provide a summary of the conversation, feedback on what was done well, and feedback on what wasn't done well. Here is the JSON transcript: {transcript}"
+            "content": f"Analyze the following JSON transcript of a conversation. Provide a summary of the conversation, feedback on what was done well, and feedback on what wasn't done well. Here is the JSON transcript: {transcript}"
         }, {
           "role": "assistant",
-          "content": "Based on the provided JSON transcript, here is the feedback: 1) Summary of Feedback, 2) Feedback on What Was Done Well, 3) Feedback on What Wasn't Done Well. 4) Trends or insights that the user may have missed. Please ensure that the feedback is constructive and actionable, providing specific examples from the transcript when relevant."
-        }])
+          "content": "Ensure that the feedback is constructive and actionable, providing specific examples from the transcript when relevant. Explain what was done well, what wasn't done well, and what insights or trends the manager may have missed."
+        }]
+    else:
+        return [{
+            "role": "system",
+            "content": "You are an executive coach specializing in providing feedback to anyone who does any public speaking. Your task is to analyze this presentation and provide detailed feedback. The feedback should be based on a JSON transcript that includes sentiment analysis and physical expression. Your job is to improve the user's understanding of their expression and improve emotional intelligence. You should highlight moments, trends and behaviors the user may have missed. The feedback should be structured and include what the user did well, what they should improve and any behaviors the user may have overlooked."
+        }, {
+            "role": "",
+            "content": f"Analyze the following JSON transcript of a presentation. Provide feedback on what was done well and what wasn't done well. Here is the JSON transcript of the video analysis: {transcript}"
+        }, {
+            "role": "assistant",
+            "content": "Ensure that the feedback is constructive and actionable, providing specific examples from the transcript when relevant. Explain what was done well, what wasn't done well, and what behaviors the presenter may have missed."
+        }]
+
+def get_feedback(messages):
+    completion = client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=messages)
 
     return(completion.choices[0].message.content)
 
-def main(file_path):
+def main(file_path, feedback_type):
     print("Starting emotion analysis...")
     job_id = start_job(file_path)
     print(f"Job started with ID: {job_id}")
@@ -123,10 +138,12 @@ def main(file_path):
 
     print(top_emotions)
 
-    feedback = get_feedback(top_emotions)
+    messages = get_openai_messages(top_emotions, feedback_type)
+    feedback = get_feedback(messages)
     print(feedback)
 
 
 if __name__ == "__main__":
     audio_file = input("Enter the path to your audio file: ")
-    main(audio_file)
+    feedback_type = input("Enter the type of content (one-on-one OR presentation): ")
+    main(audio_file, feedback_type)
