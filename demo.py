@@ -105,7 +105,7 @@ def get_openai_messages(transcript, feedback_type):
             "role": "system",
             "content": "You are an executive coach specializing in providing feedback to anyone who does any public speaking. Your task is to analyze this presentation and provide detailed feedback. The feedback should be based on a JSON transcript that includes sentiment analysis and physical expression. Your job is to improve the user's understanding of their expression and improve emotional intelligence. You should highlight moments, trends and behaviors the user may have missed. The feedback should be structured and include what the user did well, what they should improve and any behaviors the user may have overlooked."
         }, {
-            "role": "",
+            "role": "user",
             "content": f"Analyze the following JSON transcript of a presentation. Provide feedback on what was done well and what wasn't done well. Here is the JSON transcript of the video analysis: {transcript}"
         }, {
             "role": "assistant",
